@@ -1,10 +1,25 @@
 # Sheets to PDF Letters
 
-Turn a Google Sheet and a Google Doc template into a folder of personalised PDFs.
+A free tool for small teams that work in Google Workspace: turn a Google Sheet and a Google Doc template into a folder of personalised PDFs.
 
-You write a letter once, with placeholders like `{{first_name}}`. Every row of your sheet becomes one PDF, with the placeholders replaced by that row's values. It works for certificates, invitations, formal letters, attendance confirmations, offer letters, and anything else you would otherwise copy and paste by hand.
+## The problem
 
-Everything runs inside your own Google account. No server, no subscription, no data leaves Google.
+Small NGOs and non-profit teams often have the same task again and again: send a letter to many stakeholders, and make each one feel written for them. A letter to ministries in twenty countries, each addressed to a named person, with their institution, their country and an ask that fits. Thank-you letters to donors. Invitations to partners. Certificates for participants.
+
+The usual options are not great for a small team:
+
+- **Copy and paste by hand.** It takes hours, and the mistakes are the embarrassing kind: the wrong name, the wrong country, a letter that still says "Dear [NAME]".
+- **Paid mail-merge services.** Many are paid, or need you to hand your contact lists to another company, which is a real concern when the list is made of stakeholders and partners.
+- **Writing generic letters instead.** Faster, but less effective, and everyone can tell.
+- **Hiring a developer.** Rarely in the budget.
+
+## The solution
+
+You write the letter once, with placeholders like `{{first_name}}`, `{{institution}}` and `{{country}}`. You keep your contacts in a Google Sheet, one row per person. The tool creates one PDF per row, with the placeholders replaced by that row's values, and saves them in a Drive folder.
+
+It is free, it needs no coding, and everything runs inside your own Google account. No server, no subscription, no data leaves Google.
+
+It works for stakeholder letters, donor thank-yous, invitations, certificates, attendance confirmations, offer letters, and anything else you would otherwise copy and paste by hand.
 
 ![The three main screens of the sidebar](docs/sidebar-3-generate.png)
 
@@ -45,7 +60,7 @@ After that, the sidebar opens. From now on you only need steps 8 onwards.
 
 ## Use it
 
-**8. Prepare the template.** Create a Google Doc with your letter. Wherever something changes from person to person, write a placeholder in double curly braces. There is a ready-made text in [`examples/template-text.md`](examples/template-text.md) that you can paste into a new Doc to try.
+**8. Prepare the template.** Create a Google Doc with your letter. Wherever something changes from person to person, write a placeholder in double curly braces. There are two ready-made texts you can paste into a new Doc to try: a stakeholder letter in [`examples/stakeholder-template-text.md`](examples/stakeholder-template-text.md), and a certificate in [`examples/template-text.md`](examples/template-text.md).
 
 - Use a real Google Doc. If you have a Word file, upload it to Drive, open it, and choose **File, then Save as Google Docs**.
 - Give each placeholder a simple name: letters, numbers and underscores, like `{{last_name}}`. Capital letters count: `{{Country}}` and `{{country}}` are different.
@@ -53,7 +68,7 @@ After that, the sidebar opens. From now on you only need steps 8 onwards.
 - To change how a value looks (bold, font, size), format the placeholder itself in the Doc. The value normally takes on that formatting.
 - You only need to be able to open the Doc yourself. You do not have to share it with anyone.
 
-**9. Prepare the sheet.** Row 1 holds the column headers. Each row after that becomes one PDF. You can import [`examples/participants.csv`](examples/participants.csv) (File, then Import, then Upload) to try the tool with sample data.
+**9. Prepare the sheet.** Row 1 holds the column headers. Each row after that becomes one PDF. You can import [`examples/stakeholders.csv`](examples/stakeholders.csv) or [`examples/participants.csv`](examples/participants.csv) (File, then Import, then Upload) to try the tool with sample data. All names in the examples are invented.
 
 **10. Open the sidebar.** Click **PDF Generator, then Open configurator**.
 
