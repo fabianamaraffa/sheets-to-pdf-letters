@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+/* ==========================================================================
+   THEME: change the values below to make the sidebar match your own identity.
+   Colours are written as hex codes (for example #0F766E). Only this block
+   needs to change: everything else in the file reads from these values.
+   See "Make it yours" in README.md.
+   ========================================================================== */
+:root {
+  /* Main colour: header, active tab, main button */
+  --brand:       #0F766E;
+  --brand-dark:  #0B5A54;   /* slightly darker, used when hovering buttons */
+  --brand-tint:  #E6F4F2;   /* very light version, used for section titles */
+  --on-brand:    #FFFFFF;   /* text colour on top of the main colour */
+
+  /* Accent: step numbers and the focus outline */
+  --accent:      #E9B44C;
+  --on-accent:   #1F2933;
+
+  /* Status colours: success, warning, error (text / background) */
+  --ok:          #1B7F46;
+  --ok-bg:       #E8F5EC;
+  --warn:        #8A5A0B;
+  --warn-bg:     #FFF6E0;
+  --error:       #B42318;
+  --error-bg:    #FDECEA;
+
+  /* Neutrals */
+  --text:        #1F2933;
+  --muted:       #5F6B7A;
+  --border:      #D9DEE5;
+  --page:        #F4F6F8;   /* background behind the cards */
+  --surface:     #FFFFFF;   /* background of the cards */
+
+  /* Shape and fonts */
+  --radius:      10px;
+  --font:        system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono:        ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ==========================================================================
+   Layout and components (you normally do not need to touch anything below)
+   ========================================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header { background: var(--brand); color: var(--on-brand); padding: 16px 16px 12px; flex-shrink: 0; }
+.title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+.subtitle { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; margin-top: 2px; }
+
+.nav { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.nav-pill {
+  flex: 1; padding: 10px 4px; background: none; border: none; border-bottom: 3px solid transparent;
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--muted); cursor: pointer;
+}
+.nav-pill:hover:not(.active):not(.locked) { color: var(--text); }
+.nav-pill.active { color: var(--brand); border-bottom-color: var(--brand); }
+.nav-pill.locked { opacity: 0.4; cursor: not-allowed; }
+
+.panels { flex: 1; min-height: 0; position: relative; }
+.panel { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 12px; display: none; flex-direction: column; gap: 10px; }
+.panel.active { display: flex; }
+
+.section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; flex-shrink: 0; }
+.section-head {
+  padding: 8px 12px; background: var(--brand-tint); border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--brand-dark);
+}
+.section-body { padding: 12px; display: flex; flex-direction: column; gap: 11px; }
+
+label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+input[type="text"], input[type="number"], select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 11px;
+}
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input::placeholder { color: #8A94A1; }
+
+.input-hint { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.55; }
+code {
+  font-family: var(--mono); font-size: 11px; background: var(--page);
+  border: 1px solid var(--border); padding: 0 4px; border-radius: 4px; color: var(--text);
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.radio-group { display: flex; gap: 6px; }
+.radio-opt {
+  flex: 1; display: flex; align-items: center; gap: 7px; margin: 0;
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--text);
+}
+.radio-opt input { accent-color: var(--brand); }
+.radio-opt.selected { border-color: var(--brand); background: var(--brand-tint); }
+.check-opt { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; }
+.check-opt input { accent-color: var(--brand); }
+
+.mapping-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 7px; }
+.mapping-row:first-child { padding-top: 0; }
+.mapping-row:last-child { border-bottom: none; padding-bottom: 0; }
+/* Google Sheets sidebars are narrow (about 300px), so each mapping stacks: placeholder above, column below */
+.mapping-grid { display: grid; grid-template-columns: 1fr; align-items: center; gap: 6px; }
+.mapping-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mapping-extra.hidden { display: none; }
+.placeholder-tag {
+  font-family: var(--mono); font-size: 11px; background: var(--page); border: 1px solid var(--border);
+  padding: 7px 8px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.arrow { display: none; }
+.beh-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 3px; letter-spacing: 0.04em; text-transform: uppercase; }
+.mapping-grid select, .mapping-extra select, .mapping-extra input { font-size: 12px; padding: 7px 9px; }
+.empty-state { color: var(--muted); font-size: 12px; text-align: center; padding: 14px; line-height: 1.6; }
+
+.btn {
+  padding: 10px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; width: 100%;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-primary { background: var(--brand); color: var(--on-brand); padding: 12px; font-size: 14px; }
+.btn-primary:hover:not(:disabled) { background: var(--brand-dark); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-ghost { background: var(--surface); color: var(--brand); border-color: var(--brand); }
+.btn-ghost:hover { background: var(--brand-tint); }
+.btn-warning { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+.btn-warning:hover { filter: brightness(0.96); }
+.btn-stop { background: var(--surface); color: var(--error); border-color: var(--error); display: none; }
+.btn-stop.visible { display: flex; }
+.btn-small { width: auto; padding: 4px 9px; font-size: 11px; }
+
+.sheet-badge {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 10px; font-size: 12px; color: var(--muted);
+}
+.sheet-badge strong { color: var(--text); }
+
+.status-bar {
+  border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px;
+  display: none; gap: 8px; align-items: flex-start; flex-shrink: 0; background: var(--surface);
+}
+.status-bar.visible { display: flex; }
+.status-bar.loading { background: var(--brand-tint); border-color: var(--brand); }
+.status-bar.success { background: var(--ok-bg); border-color: var(--ok); }
+.status-bar.error   { background: var(--error-bg); border-color: var(--error); }
+.status-bar.warning { background: var(--warn-bg); border-color: var(--warn); }
+.status-icon {
+  font-size: 12px; font-weight: 700; flex-shrink: 0; line-height: 1; width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; color: #fff; background: var(--muted);
+}
+.status-bar.success .status-icon { background: var(--ok); }
+.status-bar.error .status-icon   { background: var(--error); }
+.status-bar.warning .status-icon { background: var(--warn); }
+.status-text { font-size: 12px; line-height: 1.5; }
+
+.log-area {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px;
+  font-family: var(--mono); font-size: 11px; max-height: 150px; overflow-y: auto;
+  display: none; flex-direction: column; gap: 3px; flex-shrink: 0;
+}
+.log-area.visible { display: flex; }
+.log-ok { color: var(--ok); }
+.log-err { color: var(--error); }
+.log-skip { color: var(--warn); }
+.log-info { color: var(--muted); }
+
+.progress-wrap { display: none; flex-shrink: 0; }
+.progress-wrap.visible { display: block; }
+.progress-track { background: var(--border); border-radius: 999px; height: 6px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--brand); border-radius: 999px; transition: width 0.3s ease; width: 0%; }
+.progress-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; margin-top: 2px; }
+
+.preflight-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.preflight-table td { padding: 5px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.preflight-table td:first-child { font-family: var(--mono); white-space: nowrap; width: 40%; color: var(--muted); }
+.preflight-table td:last-child { word-break: break-word; }
+
+.warn-item { background: var(--warn-bg); border: 1px solid var(--warn); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: var(--warn); }
+.callout { background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--muted); line-height: 1.6; }
+.callout strong { color: var(--text); }
+.warn-callout { background: var(--warn-bg); border: 1px solid var(--warn); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--warn); line-height: 1.6; }
+.sep { border: none; border-top: 1px solid var(--border); }
+
+.summary-row { display: flex; gap: 6px; align-items: baseline; font-size: 11px; }
+.summary-label { color: var(--muted); flex-shrink: 0; min-width: 44px; }
+.summary-val { word-break: break-all; }
+
+.code-example {
+  background: var(--page); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; font-family: var(--mono); font-size: 11px; line-height: 1.85;
+}
+
+.step-row { display: flex; gap: 11px; align-items: flex-start; }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
+  font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.step-body strong { font-size: 13px; display: block; margin-bottom: 2px; }
+.step-body span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+.c-ok { color: var(--ok); }
+.c-warn { color: var(--warn); }
+.c-error { color: var(--error); }
+.c-muted { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <!-- Texts you may want to change: the tool name and the line under it -->
+  <div class="title">PDF Generator</div>
+  <div class="subtitle">Google Docs &rarr; PDFs in Drive</div>
+</div>
+
+<div class="nav" role="tablist">
+  <button class="nav-pill active" id="pill-config"   role="tab" onclick="trySwitch('config')">Config</button>
+  <button class="nav-pill locked" id="pill-mapping"  role="tab" onclick="trySwitch('mapping')">Mapping</button>
+  <button class="nav-pill locked" id="pill-generate" role="tab" onclick="trySwitch('generate')">Generate</button>
+  <button class="nav-pill"        id="pill-help"     role="tab" onclick="trySwitch('help')">Guide</button>
+</div>
+
+<div class="panels">
+
+  <!-- CONFIG -->
+  <div class="panel active" id="panel-config">
+
+    <div class="sheet-badge">
+      <span id="sheet-info-text">Loading sheet...</span>
+      <button class="btn btn-ghost btn-small" onclick="loadSheet()" title="Read the sheet again (use it after changing sheet or columns)">Reload</button>
+    </div>
+
+    <div class="section">
+      <div class="section-head">Template</div>
+      <div class="section-body">
+        <div>
+          <label for="docUrl">Link of the Google Doc template</label>
+          <input type="text" id="docUrl" placeholder="https://docs.google.com/document/d/..." oninput="onDocUrlInput()">
+          <div class="input-hint">Write placeholders in the Doc like <code>{{first_name}}</code>. It must be a Google Doc, not a Word file.</div>
+        </div>
+        <button class="btn btn-ghost" onclick="loadPlaceholders()">Detect placeholders</button>
+        <div class="status-bar" id="configStatus" aria-live="polite">
+          <div class="spinner" id="configSpinner" style="display:none;"></div>
+          <div class="status-icon" id="configIcon"></div>
+          <div class="status-text" id="configText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">Destination</div>
+      <div class="section-body">
+        <div>
+          <label for="folderUrl">Link of the Drive folder for the PDFs</label>
+          <input type="text" id="folderUrl" placeholder="https://drive.google.com/drive/folders/..." oninput="updateLocks()">
+        </div>
+        <div>
+          <label for="fileNamePattern">File name pattern</label>
+          <input type="text" id="fileNamePattern" placeholder="Letter_{{last_name}}_{{row}}">
+          <div class="input-hint">Use any placeholder, plus <code>{{row}}</code> for the row number. <code>.pdf</code> is added for you.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">Rows</div>
+      <div class="section-body">
+        <div class="radio-group">
+          <label class="radio-opt selected"><input type="radio" name="rowSel" value="all" checked onchange="toggleRowRange(this)"> All rows</label>
+          <label class="radio-opt"><input type="radio" name="rowSel" value="range" onchange="toggleRowRange(this)"> Range</label>
+        </div>
+        <div id="row-range" style="display:none;" class="row2">
+          <div><label for="rowFrom">From</label><input type="number" id="rowFrom" min="1" value="1"></div>
+          <div><label for="rowTo">To</label><input type="number" id="rowTo" min="1" value="1"></div>
+        </div>
+        <label class="check-opt"><input type="checkbox" id="skipEmpty" checked> Skip completely empty rows</label>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" onclick="trySwitch('mapping')">Next: field mapping &rarr;</button>
+  </div>
+
+  <!-- MAPPING -->
+  <div class="panel" id="panel-mapping">
+
+    <div class="section">
+      <div class="section-head">Placeholders &rarr; Columns</div>
+      <div class="section-body" id="mapping-container">
+        <div class="empty-state">Paste the Doc link in Config<br>and click "Detect placeholders" to start.</div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="mapping-status" aria-live="polite">
+      <div class="status-icon" id="mapping-status-icon"></div>
+      <div class="status-text" id="mapping-status-text"></div>
+    </div>
+
+    <button class="btn btn-ghost" onclick="validateAndNext()">Next: generate &rarr;</button>
+  </div>
+
+  <!-- GENERATE -->
+  <div class="panel" id="panel-generate">
+
+    <div class="section">
+      <div class="section-head">Summary</div>
+      <div class="section-body" id="summary">
+        <div class="empty-state">Complete Config and Mapping first.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">Pre-flight check</div>
+      <div class="section-body">
+        <div class="input-hint" style="margin:0;">Tries the substitution on the first selected row, without creating any file.</div>
+        <button class="btn btn-warning" onclick="runPreflight()">Run pre-flight</button>
+        <div id="preflight-result" style="display:none; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="progress-label" id="progressLabel"></div>
+    </div>
+
+    <div class="status-bar" id="statusBar" aria-live="polite">
+      <div class="spinner" id="statusSpinner" style="display:none;"></div>
+      <div class="status-icon" id="statusIcon">i</div>
+      <div class="status-text" id="statusText">Ready to generate.</div>
+    </div>
+
+    <div class="log-area" id="logArea"></div>
+
+    <button class="btn btn-stop" id="stopBtn" onclick="stopGeneration()">Stop after the current batch</button>
+    <button class="btn btn-primary" id="generateBtn" onclick="runGeneration()">Generate PDFs</button>
+  </div>
+
+  <!-- GUIDE -->
+  <div class="panel" id="panel-help">
+
+    <div class="section">
+      <div class="section-head">1 &middot; Prepare the Google Doc</div>
+      <div class="section-body" style="gap:13px;">
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>Use a real Google Doc</strong><span>If you have a Word file, upload it to Drive, open it, then choose File &rarr; Save as Google Docs.</span></div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>Write placeholders in double curly braces</strong><span>You can use them in the body, the header, the footer and inside tables.</span></div>
+        </div>
+        <div class="code-example">
+Dear {{first_name}} {{last_name}},<br><br>
+Thank you for taking part in {{event}} on {{date}}.<br>
+Your certificate number is {{certificate_id}}.<br><br>
+Kind regards,<br>{{signatory}}
+        </div>
+        <div class="callout">
+          <strong>Placeholder rules</strong><br>
+          &bull; Best with letters, numbers and underscores: <code>{{first_name}}</code><br>
+          &bull; Upper and lower case count: <code>{{Country}}</code> is not <code>{{country}}</code><br>
+          &bull; The same placeholder can appear several times<br>
+          &bull; Column names are matched automatically when they look alike (first_name &harr; First name)
+        </div>
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>Make sure you can open it</strong><span>The tool runs with your own access, so the Doc does not need to be shared with anyone.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">2 &middot; When a cell is empty</div>
+      <div class="section-body">
+        <div class="code-example">
+<span class="c-ok">Leave blank</span> &rarr; replaced with nothing<br>
+<span>Use default</span> &rarr; replaced with a fallback text<br>
+<span class="c-warn">Skip row</span> &rarr; no PDF for that row
+        </div>
+        <div class="warn-callout">
+          "Skip row" applies as soon as ANY placeholder set to skip is empty in that row.
+          Use it for fields the letter cannot do without, like <code>{{last_name}}</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">3 &middot; Pre-flight check</div>
+      <div class="section-body" style="gap:13px;">
+        <div class="step-row">
+          <div class="step-num">&#10003;</div>
+          <div class="step-body"><strong>Shows the values of one row</strong><span>The first row of your selection. Check that every placeholder got the right column.</span></div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">&#10003;</div>
+          <div class="step-body"><strong>Warns about empty fields</strong><span>Lists each empty placeholder and what will happen to it.</span></div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">&#10003;</div>
+          <div class="step-body"><strong>Previews the file name</strong><span>Exactly as the PDF will be called.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">4 &middot; File name pattern</div>
+      <div class="section-body">
+        <div class="code-example">
+Letter_{{country}} &rarr; Letter_Italy.pdf<br>
+{{last_name}}_{{country}} &rarr; Rossi_Italy.pdf<br>
+Row{{row}}_{{country}} &rarr; Row1_Italy.pdf
+        </div>
+        <div class="callout"><code>{{row}}</code> is the number of the data row (1 = first row under the headers). If a name already exists in the folder, _2, _3 and so on are added.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">5 &middot; Good to know</div>
+      <div class="section-body">
+        <div class="callout">
+          &bull; Dates and numbers are copied exactly as they look in the sheet.<br>
+          &bull; PDFs are created a few at a time, so a long list can run for several minutes. You can stop at any moment and continue later with "Range".<br>
+          &bull; Always do a pre-flight and check the first PDF before launching a big batch.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // How many rows are sent to the server at each step. Lower it if your template is very large.
+  var CHUNK_SIZE = 5;
+
+  var sheetHeaders = [];
+  var placeholders = [];
+  var detectedUrl = '';
+  var totalRows = 0;
+  var sheetName = '';
+  var forceMode = false;
+  var running = false;
+  var cancelled = false;
+
+  function $(id) { return document.getElementById(id); }
+
+  // Makes text safe to place inside HTML
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // 0 -> A, 25 -> Z, 26 -> AA, ...
+  function colLetter(index) {
+    var n = index + 1, s = '';
+    while (n > 0) {
+      var m = (n - 1) % 26;
+      s = String.fromCharCode(65 + m) + s;
+      n = Math.floor((n - 1) / 26);
+    }
+    return s;
+  }
+
+  function normalise(s) { return String(s).toLowerCase().replace(/[\s_\-]+/g, ''); }
+
+  // ---------- sheet ----------
+
+  function loadSheet() {
+    $('sheet-info-text').textContent = 'Loading sheet...';
+    google.script.run
+      .withSuccessHandler(function (data) {
+        sheetHeaders = data.headers || [];
+        totalRows = data.totalRows || 0;
+        sheetName = data.sheetName || '';
+        $('sheet-info-text').innerHTML = '<strong>' + esc(sheetName) + '</strong> &nbsp;&middot;&nbsp; <strong>' +
+          totalRows + '</strong> rows &nbsp;&middot;&nbsp; <strong>' + sheetHeaders.length + '</strong> columns';
+        $('rowTo').value = Math.max(totalRows, 1);
+        if (placeholders.length) renderMapping();
+      })
+      .withFailureHandler(function () { $('sheet-info-text').textContent = 'Could not read the sheet'; })
+      .getSheetData();
+  }
+
+  window.onload = loadSheet;
+
+  // ---------- navigation ----------
+
+  function onDocUrlInput() {
+    if (placeholders.length && $('docUrl').value.trim() !== detectedUrl) {
+      placeholders = [];
+      detectedUrl = '';
+      renderMapping();
+    }
+    updateLocks();
+  }
+
+  function updateLocks() {
+    var hasDoc = !!$('docUrl').value.trim();
+    var hasFolder = !!$('folderUrl').value.trim();
+    setLock('pill-mapping', !hasDoc);
+    setLock('pill-generate', !(hasDoc && hasFolder));
+  }
+
+  function setLock(id, locked) {
+    $(id).classList.toggle('locked', locked);
+    $(id).setAttribute('aria-disabled', locked ? 'true' : 'false');
+  }
+
+  function trySwitch(name) {
+    var hasDoc = !!$('docUrl').value.trim();
+    var hasFolder = !!$('folderUrl').value.trim();
+    if ((name === 'mapping' || name === 'generate') && !hasDoc) {
+      showConfigStatus('Paste the Google Doc link first.', 'error'); switchTab('config'); return;
+    }
+    if (name === 'generate' && !hasFolder) {
+      showConfigStatus('Paste the Drive folder link first.', 'error'); switchTab('config'); return;
+    }
+    if (name === 'generate' && placeholders.length === 0) {
+      showConfigStatus('Click "Detect placeholders" first.', 'error'); switchTab('config'); return;
+    }
+    switchTab(name);
+  }
+
+  function switchTab(name) {
+    var names = ['config', 'mapping', 'generate', 'help'];
+    document.querySelectorAll('.nav-pill').forEach(function (p, i) {
+      p.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+    $('panel-' + name).classList.add('active');
+    if (name === 'generate') buildSummary();
+  }
+
+  function toggleRowRange(radio) {
+    $('row-range').style.display = radio.value === 'range' ? 'grid' : 'none';
+    document.querySelectorAll('.radio-opt').forEach(function (el) { el.classList.remove('selected'); });
+    radio.closest('.radio-opt').classList.add('selected');
+  }
+
+  // Rows chosen in Config. Returns {from, to} or {error}
+  function getRowRange() {
+    if (totalRows < 1) return { error: 'The sheet has no data rows under the headers.' };
+    if (document.querySelector('input[name="rowSel"]:checked').value === 'all') {
+      return { from: 1, to: totalRows };
+    }
+    var f = parseInt($('rowFrom').value, 10);
+    var t = parseInt($('rowTo').value, 10);
+    if (!f || !t || f < 1 || t < f || t > totalRows) {
+      return { error: 'Choose a range between 1 and ' + totalRows + ', with "From" not larger than "To".' };
+    }
+    return { from: f, to: t };
+  }
+
+  // ---------- placeholders and mapping ----------
+
+  function loadPlaceholders() {
+    var url = $('docUrl').value.trim();
+    if (!url) { showConfigStatus('Paste the Google Doc link first.', 'error'); return; }
+    showConfigStatus('Reading the Doc...', 'loading');
+    google.script.run
+      .withSuccessHandler(function (result) {
+        if (result.error) { showConfigStatus(result.error, 'error'); return; }
+        if (result.placeholders.length === 0) {
+          showConfigStatus('No placeholders found. Check that the Doc contains text like {{first_name}}.', 'error');
+          return;
+        }
+        placeholders = result.placeholders;
+        detectedUrl = url;
+        showConfigStatus('Found ' + placeholders.length + ' placeholder(s): ' +
+          placeholders.map(function (p) { return '{{' + p + '}}'; }).join(', '), 'success');
+        renderMapping();
+        updateLocks();
+        setTimeout(function () { trySwitch('mapping'); }, 700);
+      })
+      .withFailureHandler(function (err) { showConfigStatus('Error: ' + err.message, 'error'); })
+      .getPlaceholdersFromDoc(url);
+  }
+
+  function renderMapping() {
+    resetForce();
+    var container = $('mapping-container');
+    if (placeholders.length === 0) {
+      container.innerHTML = '<div class="empty-state">Paste the Doc link in Config<br>and click "Detect placeholders" to start.</div>';
+      return;
+    }
+    var options = sheetHeaders.map(function (h) {
+      return '<option value="' + h.index + '">' + esc(h.label) + ' (col ' + colLetter(h.index) + ')</option>';
+    }).join('');
+
+    container.innerHTML = placeholders.map(function (p, i) {
+      var tag = '{{' + esc(p) + '}}';
+      return '<div class="mapping-row">' +
+        '<div class="mapping-grid">' +
+          '<div class="placeholder-tag" title="' + tag + '">' + tag + '</div>' +
+          '<div class="arrow">&rarr;</div>' +
+          '<select id="map_' + i + '" aria-label="Column for ' + tag + '" onchange="onMappingChange(' + i + ')">' +
+            '<option value="">not mapped</option>' + options +
+          '</select>' +
+        '</div>' +
+        '<div class="mapping-extra hidden" id="mbottom_' + i + '">' +
+          '<div>' +
+            '<div class="beh-label">If empty</div>' +
+            '<select id="beh_' + i + '" aria-label="If empty, for ' + tag + '" onchange="onBehaviourChange(' + i + ')">' +
+              '<option value="empty">Leave blank</option>' +
+              '<option value="default">Use default</option>' +
+              '<option value="skip">Skip row</option>' +
+            '</select>' +
+          '</div>' +
+          '<div id="defwrap_' + i + '" style="display:none;">' +
+            '<div class="beh-label">Default text</div>' +
+            '<input type="text" id="def_' + i + '" aria-label="Default text for ' + tag + '" placeholder="fallback text">' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Pre-select the column whose name looks like the placeholder
+    placeholders.forEach(function (p, i) {
+      var key = normalise(p);
+      var match = sheetHeaders.filter(function (h) { return normalise(h.label) === key; })[0];
+      if (match) { $('map_' + i).value = String(match.index); onMappingChange(i); }
+    });
+  }
+
+  function onMappingChange(i) {
+    $('mbottom_' + i).classList.toggle('hidden', $('map_' + i).value === '');
+    resetForce();
+  }
+
+  function onBehaviourChange(i) {
+    $('defwrap_' + i).style.display = $('beh_' + i).value === 'default' ? 'block' : 'none';
+  }
+
+  function unmappedList() {
+    return placeholders.filter(function (p, i) {
+      var sel = $('map_' + i);
+      return !sel || sel.value === '';
+    });
+  }
+
+  function validateAndNext() {
+    var unmapped = unmappedList();
+    var bar = $('mapping-status');
+    if (unmapped.length > 0) {
+      bar.className = 'status-bar visible warning';
+      $('mapping-status-icon').textContent = '!';
+      $('mapping-status-text').textContent = 'Not mapped: ' +
+        unmapped.map(function (p) { return '{{' + p + '}}'; }).join(', ') + '. They will stay in the PDF as they are.';
+    } else {
+      bar.className = 'status-bar visible success';
+      $('mapping-status-icon').textContent = '✓';
+      $('mapping-status-text').textContent = 'All placeholders are mapped.';
+    }
+    trySwitch('generate');
+  }
+
+  // ---------- summary and configuration ----------
+
+  function behaviourOf(i) { return $('beh_' + i) ? $('beh_' + i).value : 'empty'; }
+  function defaultOf(i) { return $('def_' + i) ? $('def_' + i).value : ''; }
+
+  function buildSummary() {
+    var docUrl = $('docUrl').value.trim();
+    var folderUrl = $('folderUrl').value.trim();
+    var pattern = $('fileNamePattern').value.trim() || 'Letter_{{row}}';
+    var range = getRowRange();
+    var rowDesc = range.error ? '<span class="c-error">' + esc(range.error) + '</span>'
+      : (range.from === 1 && range.to === totalRows && document.querySelector('input[name="rowSel"]:checked').value === 'all'
+          ? 'All (' + totalRows + ' rows)'
+          : 'Rows ' + range.from + ' to ' + range.to + ' (' + (range.to - range.from + 1) + ' rows)');
+
+    var mappingLines = placeholders.map(function (p, i) {
+      var sel = $('map_' + i);
+      var col = sel && sel.value !== '' ? esc(sel.options[sel.selectedIndex].text) : '<span class="c-error">not mapped</span>';
+      var beh = behaviourOf(i);
+      var behLabel = beh === 'skip' ? '<span class="c-warn">skip row</span>'
+        : beh === 'default' ? '<span class="c-ok">default: "' + esc(defaultOf(i)) + '"</span>'
+        : '<span class="c-muted">blank</span>';
+      return '<tr><td>{{' + esc(p) + '}}</td><td>' + col + ' &nbsp;&middot;&nbsp; ' + behLabel + '</td></tr>';
+    }).join('');
+
+    $('summary').innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:7px;">' +
+        '<div class="summary-row"><span class="summary-label">Doc:</span><span class="summary-val">' + esc(docUrl) + '</span></div>' +
+        '<div class="summary-row"><span class="summary-label">Folder:</span><span class="summary-val">' + esc(folderUrl || '(not set)') + '</span></div>' +
+        '<div class="summary-row"><span class="summary-label">Name:</span><span class="summary-val" style="font-family:var(--mono);">' + esc(pattern) + '.pdf</span></div>' +
+        '<div class="summary-row"><span class="summary-label">Rows:</span><span class="summary-val">' + rowDesc + '</span></div>' +
+        '<hr class="sep" style="margin:2px 0;">' +
+        '<table class="preflight-table">' + (mappingLines || '<tr><td colspan="2" class="c-muted">No mapping set.</td></tr>') + '</table>' +
+      '</div>';
+  }
+
+  function buildConfig(forceGenerate) {
+    var mapping = {}, fieldConfigs = {};
+    placeholders.forEach(function (p, i) {
+      var sel = $('map_' + i);
+      if (sel && sel.value !== '') {
+        mapping[p] = parseInt(sel.value, 10);
+        fieldConfigs[p] = { behaviour: behaviourOf(i), defaultValue: defaultOf(i) };
+      }
+    });
+    return {
+      sheetName: sheetName,
+      docUrl: $('docUrl').value.trim(),
+      folderUrl: $('folderUrl').value.trim(),
+      fileNamePattern: $('fileNamePattern').value.trim(),
+      mapping: mapping,
+      fieldConfigs: fieldConfigs,
+      placeholders: placeholders,
+      skipIfEmpty: $('skipEmpty').checked,
+      forceGenerate: !!forceGenerate
+    };
+  }
+
+  // ---------- pre-flight ----------
+
+  function runPreflight() {
+    if (placeholders.length === 0) { showStatus('Detect the placeholders first.', 'error'); return; }
+    var range = getRowRange();
+    if (range.error) { showStatus(range.error, 'error'); return; }
+    $('preflight-result').style.display = 'none';
+    showStatus('Checking row ' + range.from + '...', 'loading');
+
+    var config = buildConfig(true);
+    config.previewRow = range.from;
+
+    google.script.run
+      .withSuccessHandler(function (result) {
+        if (!result.success) { showStatus('Pre-flight error: ' + result.error, 'error'); return; }
+        var html = '';
+        if (result.warnings && result.warnings.length > 0) {
+          html += '<div style="display:flex;flex-direction:column;gap:5px;">' +
+            result.warnings.map(function (w) { return '<div class="warn-item">! ' + esc(w) + '</div>'; }).join('') + '</div>';
+        } else {
+          html += '<div class="c-ok" style="font-size:12px;">No issues detected.</div>';
+        }
+        html += '<div class="input-hint" style="margin:0;">Data row ' + esc(result.rowNumber) + '</div>';
+        html += '<table class="preflight-table">';
+        for (var p in result.preview) {
+          var val = result.preview[p];
+          html += '<tr><td>{{' + esc(p) + '}}</td><td>' +
+            (val === '' ? '<span class="c-muted" style="font-style:italic;">(empty)</span>' : esc(val)) + '</td></tr>';
+        }
+        html += '</table>';
+        html += '<div style="font-size:11px;" class="c-muted">File name: <span style="color:var(--text);font-family:var(--mono);">' + esc(result.fileName) + '</span></div>';
+        var box = $('preflight-result');
+        box.innerHTML = html;
+        box.style.display = 'flex';
+        var hasUnmapped = (result.warnings || []).some(function (w) { return w.indexOf('Unmapped') === 0; });
+        showStatus(hasUnmapped ? 'Pre-flight done. Check the warnings.' : 'Pre-flight passed. Ready to generate.', hasUnmapped ? 'warning' : 'success');
+      })
+      .withFailureHandler(function (err) { showStatus('Pre-flight error: ' + err.message, 'error'); })
+      .preflightCheck(config);
+  }
+
+  // ---------- generation ----------
+
+  function setGenerateButton() {
+    $('generateBtn').textContent = forceMode ? 'Generate anyway' : 'Generate PDFs';
+  }
+
+  function resetForce() {
+    forceMode = false;
+    setGenerateButton();
+  }
+
+  function setRunning(isRunning) {
+    running = isRunning;
+    $('generateBtn').disabled = isRunning;
+    $('stopBtn').classList.toggle('visible', isRunning);
+  }
+
+  function stopGeneration() {
+    cancelled = true;
+    $('stopBtn').disabled = true;
+    showStatus('Stopping after the current batch...', 'loading');
+  }
+
+  function logLine(cls, text) {
+    var log = $('logArea');
+    var div = document.createElement('div');
+    div.className = cls;
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function runGeneration() {
+    if (running) return;
+    var range = getRowRange();
+    if (range.error) { showStatus(range.error, 'error'); return; }
+    if (placeholders.length === 0) { showStatus('Detect the placeholders first.', 'error'); return; }
+    var config = buildConfig(forceMode);
+    if (!config.docUrl || !config.folderUrl) { showStatus('Set the Doc link and the folder link first.', 'error'); return; }
+
+    var unmapped = unmappedList();
+    if (unmapped.length > 0 && !forceMode) {
+      forceMode = true;
+      setGenerateButton();
+      showStatus('Not mapped: ' + unmapped.map(function (p) { return '{{' + p + '}}'; }).join(', ') +
+        '. Fix it in Mapping, or click "Generate anyway" to leave them in the PDFs.', 'warning');
+      return;
+    }
+
+    var total = range.to - range.from + 1;
+    var done = 0, ok = 0, skipped = 0, errors = 0;
+    var lastRowDone = range.from - 1;
+    cancelled = false;
+    $('stopBtn').disabled = false;
+    $('logArea').innerHTML = '';
+    $('logArea').classList.add('visible');
+    $('progressWrap').classList.add('visible');
+    setProgress(0, total);
+    setRunning(true);
+    showStatus('Generating. You can keep this sidebar open and do other things.', 'loading');
+
+    function finish(message, type) {
+      setRunning(false);
+      resetForce();
+      logLine('log-info', '-- ' + ok + ' generated, ' + skipped + ' skipped, ' + errors + ' errors --');
+      showStatus(message, type);
+    }
+
+    function step(fromRow) {
+      if (cancelled) {
+        finish('Stopped. Rows up to ' + lastRowDone + ' were processed. To continue, choose "Range" starting at ' + (lastRowDone + 1) + '.', 'warning');
+        return;
+      }
+      if (fromRow > range.to) {
+        var type = errors > 0 ? 'warning' : 'success';
+        finish('Done. ' + ok + ' PDF(s) saved to your Drive folder.' + (errors > 0 ? ' Some rows had errors: see the list.' : ''), type);
+        return;
+      }
+      var toRow = Math.min(fromRow + CHUNK_SIZE - 1, range.to);
+      var chunkConfig = buildConfig(forceMode);
+      chunkConfig.rowFrom = fromRow;
+      chunkConfig.rowTo = toRow;
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          if (!result.success) {
+            finish('Error: ' + result.error + (lastRowDone >= range.from ? ' Rows up to ' + lastRowDone + ' were processed.' : ''), 'error');
+            return;
+          }
+          result.results.forEach(function (r) {
+            if (r.status === 'ok') logLine('log-ok', 'OK  ' + r.name);
+            else if (r.status === 'error') logLine('log-err', 'ERR Row ' + (r.row + 1) + ': ' + r.error);
+            else logLine('log-skip', 'SKIP Row ' + (r.row + 1) + (r.reason ? ': ' + r.reason : ''));
+          });
+          ok += result.successCount; skipped += result.skippedCount; errors += result.errorCount;
+          var next = result.nextRow ? result.nextRow : toRow + 1;
+          done += (next - fromRow);
+          lastRowDone = next - 1;
+          setProgress(done, total);
+          step(next);
+        })
+        .withFailureHandler(function (err) {
+          finish('Connection problem: ' + err.message + '. Rows up to ' + lastRowDone + ' were processed. Continue with "Range" from ' + (lastRowDone + 1) + '.', 'error');
+        })
+        .generatePDFs(chunkConfig);
+    }
+
+    step(range.from);
+  }
+
+  function setProgress(done, total) {
+    var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    $('progressBar').style.width = pct + '%';
+    $('progressLabel').textContent = done + ' of ' + total + ' rows';
+  }
+
+  // ---------- status messages ----------
+
+  function showStatus(msg, type) { applyStatus('statusBar', 'statusIcon', 'statusSpinner', 'statusText', msg, type); }
+  function showConfigStatus(msg, type) { applyStatus('configStatus', 'configIcon', 'configSpinner', 'configText', msg, type); }
+
+  function applyStatus(barId, iconId, spinnerId, textId, msg, type) {
+    $(barId).className = 'status-bar visible ' + type;
+    $(textId).textContent = msg;
+    if (type === 'loading') {
+      $(iconId).style.display = 'none';
+      $(spinnerId).style.display = 'block';
+    } else {
+      $(spinnerId).style.display = 'none';
+      $(iconId).style.display = 'flex';
+      $(iconId).textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : '!';
+    }
+  }
+</script>
+</body>
+</html>

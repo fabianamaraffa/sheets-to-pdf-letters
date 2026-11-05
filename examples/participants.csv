@@ -1,0 +1,8 @@
+first_name,last_name,event,date,certificate_id,signatory
+Ada,Lovelace,Summer Workshop,12 June 2026,CERT-001,Grace Hopper
+Alan,Turing,Summer Workshop,12 June 2026,CERT-002,Grace Hopper
+Marie,Curie,Summer Workshop,12 June 2026,,Grace Hopper
+Jose,Garcia Marquez,Summer Workshop,12 June 2026,CERT-004,Grace Hopper
+Chloe,O'Brien,Summer Workshop,12 June 2026,CERT-005,Grace Hopper
+,,,,,
+Katherine,Johnson,Summer Workshop,12 June 2026,CERT-007,Grace Hopper
